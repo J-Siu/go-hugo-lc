@@ -1,6 +1,6 @@
 ## go-hugo-lc
 
-Hugo site link checker written in golang. Handy for checking internal link breakage after migration.
+Hugo site link checker written in Golang. Handy for checking internal link breakage after migration.
 
 <!-- TOC -->
 
@@ -17,13 +17,17 @@ Hugo site link checker written in golang. Handy for checking internal link break
 
 ### Highlight
 
+- Check using local content directory
 - Does not use markdown parser
 - Golang standard library only
 
 ### Limitation
 
-- Only detect md links in format `[]()`
 - Verify internal link only
+- Links need server side redirection will be marked as fail
+- Only detect links in markdown format `[]()`
+
+All 3 may improve in future.
 
 ### Install
 
