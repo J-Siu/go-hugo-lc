@@ -26,10 +26,11 @@ import (
 )
 
 func usage() {
-	fmt.Println("go-hugo-lc MIT License	Copyright (c) 2020 John Siu")
-	fmt.Println("Support: https://github.com/J-Siu/go-hugo-lc/issues")
-	fmt.Println("Debug  : export _DEBUG=true")
-	fmt.Println("Usage  : go-hugo-lc <baseURL> <content dir> <public dir>")
+	fmt.Println("go-hugo-lc version 0.5")
+	fmt.Println("License : MIT License Copyright (c) 2020 John Siu")
+	fmt.Println("Support : https://github.com/J-Siu/go-hugo-lc/issues")
+	fmt.Println("Debug   : export _DEBUG=true")
+	fmt.Println("Usage   : go-hugo-lc <baseURL> <content dir> <public dir>")
 }
 
 func main() {
