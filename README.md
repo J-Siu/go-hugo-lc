@@ -74,6 +74,8 @@ go-hugo-lc https://example.com content/post/post.md public
 
 - 0.5
   - Initial Commit
+- 0.5.1
+  - Use mod
 
 ### License
 
