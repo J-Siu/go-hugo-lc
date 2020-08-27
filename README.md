@@ -6,7 +6,8 @@ Hugo site link checker written in Golang. Handy for checking internal link break
 
 - [Highlight](#highlight)
 - [Limitation](#limitation)
-- [Install](#install)
+- [Binary](#binary)
+- [Compile](#compile)
 - [Usage](#usage)
 - [Repository](#repository)
 - [Contributors](#contributors)
@@ -29,7 +30,11 @@ Hugo site link checker written in Golang. Handy for checking internal link break
 
 All 3 may improve in future.
 
-### Install
+### Binary
+
+https://github.com/J-Siu/go-hugo-lc/releases
+
+### Compile
 
 ```sh
 go get github.com/J-Siu/go-hugo-lc
