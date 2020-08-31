@@ -20,13 +20,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/J-Siu/go-hugo-lc/helper"
+	"github.com/J-Siu/go-helper"
 	"github.com/J-Siu/go-hugo-lc/md"
 	"github.com/J-Siu/go-hugo-lc/site"
 )
 
 func usage() {
-	fmt.Println("go-hugo-lc version 0.5")
+	fmt.Println("go-hugo-lc version 0.5.2")
 	fmt.Println("License : MIT License Copyright (c) 2020 John Siu")
 	fmt.Println("Support : https://github.com/J-Siu/go-hugo-lc/issues")
 	fmt.Println("Debug   : export _DEBUG=true")
@@ -34,9 +34,7 @@ func usage() {
 }
 
 func main() {
-	if os.Getenv("_DEBUG") == "true" {
-		helper.Debug = true
-	}
+	helper.DebugEnv()
 
 	// ARGs
 	args := os.Args[1:]

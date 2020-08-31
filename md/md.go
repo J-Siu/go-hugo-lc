@@ -19,7 +19,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/J-Siu/go-hugo-lc/helper"
+	"github.com/J-Siu/go-helper"
 	"github.com/J-Siu/go-hugo-lc/site"
 )
 

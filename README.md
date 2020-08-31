@@ -81,6 +81,8 @@ go-hugo-lc https://example.com content/post/post.md public
   - Initial Commit
 - 0.5.1
   - Use mod
+- 0.5.2
+  - Use github.com/J-Siu/go-helper
 
 ### License
 
