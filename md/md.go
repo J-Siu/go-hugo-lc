@@ -13,11 +13,15 @@
 package md
 
 import (
+	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/J-Siu/go-helper"
 	"github.com/J-Siu/go-hugo-lc/site"
@@ -32,64 +36,146 @@ type MD struct {
 	Buf   []byte // content buffer
 }
 
+// MDS - MD array
+var MDS = []*MD{}
+
 // LinkReg match [*](*)
 var LinkReg = regexp.MustCompile(`(\[[^[]*\])\(([^(]*)\)`)
 
-// Check - check internal links
-func (m *MD) Check() {
-	var localPath string
-	// Get links
-	m.Links = LinkReg.FindAllSubmatch([]byte(m.Buf), -1)
-	// free the buf
-	m.Buf = nil
-	for _, link := range m.Links {
-		linkURLprep := string(link[2][:])
-		helper.DebugLog("MD:Check:linkURLprep:", linkURLprep)
+// ChkExt - check external
+var ChkExt = false
 
-		if strings.HasPrefix(linkURLprep, "//") {
-			helper.DebugLog("MD:Check:+https")
-			linkURLprep = "https:" + linkURLprep
+// ChkWeb - check again website
+var ChkWeb = false
+
+// Init - create MD array entry
+func Init(dir string) {
+	helper.DebugLog("MD:Init:dir:", dir)
+	// Get MD file list
+	helper.ErrCheck(filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && strings.ToLower(filepath.Ext(path)) == ".md" {
+			m := new(MD)
+			m.Path = path
+			MDS = append(MDS, m)
 		}
+		return nil
+	}))
+}
 
-		linkURL, e := url.Parse(linkURLprep)
-		helper.ErrCheck(e)
-		helper.DebugLog("MD:Check:linkURL.Host:", linkURL.Host)
-		helper.DebugLog("MD:Check:linkURL.Path:", linkURL.Path)
+// Start - processing
+func Start() {
+	var wg sync.WaitGroup
+	for _, m := range MDS {
+		helper.DebugLog("MD:Start:", m.Path)
+		wg.Add(1)
+		go m.process(&wg)
+	}
+	wg.Wait()
+}
 
-		if linkURL.Host == "" || linkURL.Host == site.Site.BaseURL.Host {
-			helper.DebugLog("MD:Check:(local)")
-			// check if public+path exist
-			localPath = path.Join(site.Site.Public, linkURL.Path)
-			_, e = os.Stat(localPath)
-			if e == nil {
-				helper.DebugLog("MD:Check:localPath:(found)", localPath)
-			} else {
-				// path does not exist
-				helper.DebugLog("MD:Check:localPath:(not found)", localPath)
-				m.Fails = append(m.Fails, link)
+// Report - print
+func Report() {
+	var totalLink = 0
+	var totalFail = 0
+	for _, m := range MDS {
+		fmt.Printf("File: %s\n", m.Path)
+		fmt.Printf("Link: %d\n", len(m.Links))
+		totalLink += len(m.Links)
+		totalFail += len(m.Fails)
+		if m.Fails != nil {
+			fmt.Printf("Link: %d\n", len(m.Fails))
+			for _, fail := range m.Fails {
+				fmt.Println("[x]", string(fail[2][:]))
 			}
-		} else {
-			helper.DebugLog("MD:Check:(not local)")
+			fmt.Println()
+			fmt.Println("---")
 		}
 	}
+	fmt.Printf("Total File: %d\n", len(MDS))
+	fmt.Printf("Total Link: %d\n", totalLink)
+	fmt.Printf("Total Fail: %d\n", totalFail)
+}
+
+// CheckFile - Check against local file
+func (md *MD) checkLink(wg *sync.WaitGroup, link [][]byte) {
+	var localPath string
+	linkURLprep := string(link[2][:])
+
+	if strings.HasPrefix(linkURLprep, "//") {
+		linkURLprep = "https:" + linkURLprep
+	}
+	helper.DebugLog("MD:checkLink:linkURLprep:", linkURLprep)
+
+	linkURL, e := url.Parse(linkURLprep)
+	helper.ErrCheck(e)
+	helper.DebugLog("MD:checkLink:linkURL.Host:", linkURL.Host)
+	helper.DebugLog("MD:checkLink:linkURL.Path:", linkURL.Path)
+
+	if linkURL.Host == "" {
+		helper.DebugLog("MD:checkLink:(local)")
+		// check if public+path exist
+		localPath = path.Join(site.Site.Public, linkURL.Path)
+		_, e = os.Stat(localPath)
+		if e == nil {
+			helper.DebugLog("MD:checkLink:localPath:(found)", localPath)
+		} else {
+			// path does not exist
+			helper.DebugLog("MD:checkLink:localPath:(not found)", localPath)
+			md.Fails = append(md.Fails, link)
+		}
+	} else {
+		if ChkExt {
+			resp, e := http.Get(linkURLprep)
+			if e == nil {
+				defer resp.Body.Close()
+				helper.DebugLog("MD:checkLink:resp.StatusCode:", resp.StatusCode)
+				if resp.StatusCode >= 400 {
+					md.Fails = append(md.Fails, link)
+				}
+			} else {
+				helper.DebugLog("MD:checkLink:ChkExt:e:", e)
+				md.Fails = append(md.Fails, link)
+			}
+		} else {
+			helper.DebugLog("MD:checkLink:(not local)")
+		}
+	}
+
+	wg.Done()
+}
+
+// Check - check internal links
+func (md *MD) Check() {
+	// Get links
+	md.Links = LinkReg.FindAllSubmatch([]byte(md.Buf), -1)
+	helper.DebugLog("MD:Check:md.Links#:", len(md.Links))
+	// free the buf
+	md.Buf = nil
+
+	var wg sync.WaitGroup
+	for _, link := range md.Links {
+		wg.Add(1)
+		go md.checkLink(&wg, link)
+	}
+	wg.Wait()
 }
 
 // Close markdown file
-func (m *MD) Close() error {
+func (md *MD) Close() error {
 	helper.DebugLog("MD:Close")
-	return m.Fh.Close()
+	return md.Fh.Close()
 }
 
 // Open markdown file
-func (m *MD) Open() error {
+func (md *MD) Open() error {
 	var e error
 	helper.DebugLog("MD:Open")
-	m.Fh, e = os.Open(m.Path)
+	md.Fh, e = os.Open(md.Path)
 	return e
 }
 
 // Read markdown file
-func (m *MD) Read() error {
+func (md *MD) Read() error {
 	helper.DebugLog("MD:Read")
 
 	var e error
@@ -97,15 +183,24 @@ func (m *MD) Read() error {
 	var n64 int64
 
 	// Reset to file start
-	n64, e = m.Fh.Seek(0, 0)
+	n64, e = md.Fh.Seek(0, 0)
 	helper.ErrCheck(e)
 	helper.DebugLog("MD:Read:Seek:", n64)
 
-	stat, e := os.Stat(m.Path)
+	stat, e := os.Stat(md.Path)
 	helper.ErrCheck(e)
-	m.Buf = make([]byte, stat.Size())
-	n, e = m.Fh.Read(m.Buf)
+	md.Buf = make([]byte, stat.Size())
+	n, e = md.Fh.Read(md.Buf)
 	helper.DebugLog("MD:Read:byte:", n)
 
 	return e
+}
+
+// Process markdown file
+func (md *MD) process(wg *sync.WaitGroup) {
+	helper.ErrCheck(md.Open())
+	helper.ErrCheck(md.Read())
+	helper.ErrCheck(md.Close())
+	md.Check()
+	wg.Done()
 }
