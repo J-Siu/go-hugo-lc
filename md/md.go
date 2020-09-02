@@ -36,40 +36,39 @@ type MD struct {
 	Buf   []byte // content buffer
 }
 
-// MDS - MD array
-var MDS = []*MD{}
-
-// LinkReg match [*](*)
-var LinkReg = regexp.MustCompile(`(\[[^[]*\])\(([^(]*)\)`)
-
 // ChkExt - check external
 var ChkExt = false
 
 // ChkWeb - check again website
 var ChkWeb = false
 
-// Init - create MD array entry
-func Init(dir string) {
-	helper.DebugLog("MD:Init:dir:", dir)
-	// Get MD file list
-	helper.ErrCheck(filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+// mds - MD array
+var mds = []*MD{}
+
+// wg - wait group
+var wg sync.WaitGroup
+
+// linkReg match [*](*)
+var linkReg = regexp.MustCompile(`(\[[^[]*\])\(([^(]*)\)`)
+
+func walkdir(path string, info os.FileInfo, err error) error {
+	if info != nil {
 		if !info.IsDir() && strings.ToLower(filepath.Ext(path)) == ".md" {
 			m := new(MD)
 			m.Path = path
-			MDS = append(MDS, m)
+			mds = append(mds, m)
+			wg.Add(1)
+			go m.process(&wg)
 		}
-		return nil
-	}))
+	}
+	return nil
 }
 
-// Start - processing
-func Start() {
-	var wg sync.WaitGroup
-	for _, m := range MDS {
-		helper.DebugLog("MD:Start:", m.Path)
-		wg.Add(1)
-		go m.process(&wg)
-	}
+// Process - create MD array entry
+func Process(dir string) {
+	helper.DebugLog("MD:Init:dir:", dir)
+	// Get MD file list
+	helper.ErrCheck(filepath.Walk(dir, walkdir))
 	wg.Wait()
 }
 
@@ -77,7 +76,7 @@ func Start() {
 func Report() {
 	var totalLink = 0
 	var totalFail = 0
-	for _, m := range MDS {
+	for _, m := range mds {
 		fmt.Printf("File: %s\n", m.Path)
 		fmt.Printf("Link: %d\n", len(m.Links))
 		totalLink += len(m.Links)
@@ -91,7 +90,7 @@ func Report() {
 			fmt.Println("---")
 		}
 	}
-	fmt.Printf("Total File: %d\n", len(MDS))
+	fmt.Printf("Total File: %d\n", len(mds))
 	fmt.Printf("Total Link: %d\n", totalLink)
 	fmt.Printf("Total Fail: %d\n", totalFail)
 }
@@ -145,9 +144,9 @@ func (md *MD) checkLink(wg *sync.WaitGroup, link [][]byte) {
 }
 
 // Check - check internal links
-func (md *MD) Check() {
+func (md *MD) chk() {
 	// Get links
-	md.Links = LinkReg.FindAllSubmatch([]byte(md.Buf), -1)
+	md.Links = linkReg.FindAllSubmatch([]byte(md.Buf), -1)
 	helper.DebugLog("MD:Check:md.Links#:", len(md.Links))
 	// free the buf
 	md.Buf = nil
@@ -161,13 +160,13 @@ func (md *MD) Check() {
 }
 
 // Close markdown file
-func (md *MD) Close() error {
+func (md *MD) close() error {
 	helper.DebugLog("MD:Close")
 	return md.Fh.Close()
 }
 
 // Open markdown file
-func (md *MD) Open() error {
+func (md *MD) open() error {
 	var e error
 	helper.DebugLog("MD:Open")
 	md.Fh, e = os.Open(md.Path)
@@ -175,7 +174,7 @@ func (md *MD) Open() error {
 }
 
 // Read markdown file
-func (md *MD) Read() error {
+func (md *MD) read() error {
 	helper.DebugLog("MD:Read")
 
 	var e error
@@ -198,9 +197,9 @@ func (md *MD) Read() error {
 
 // Process markdown file
 func (md *MD) process(wg *sync.WaitGroup) {
-	helper.ErrCheck(md.Open())
-	helper.ErrCheck(md.Read())
-	helper.ErrCheck(md.Close())
-	md.Check()
+	helper.ErrCheck(md.open())
+	helper.ErrCheck(md.read())
+	helper.ErrCheck(md.close())
+	md.chk()
 	wg.Done()
 }

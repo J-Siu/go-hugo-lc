@@ -62,7 +62,6 @@ func main() {
 		helper.DebugLog("Public:", site.Site.Public)
 	}
 
-	md.Init(site.Site.Content)
-	md.Start()
+	md.Process(site.Site.Content)
 	md.Report()
 }
