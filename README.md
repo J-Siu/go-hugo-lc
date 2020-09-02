@@ -83,6 +83,8 @@ go-hugo-lc https://example.com content/post/post.md public
   - Use mod
 - 0.5.2
   - Use github.com/J-Siu/go-helper
+- 0.5.3
+  - Use goroutine
 
 ### License
 

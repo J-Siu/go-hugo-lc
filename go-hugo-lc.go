@@ -24,7 +24,7 @@ import (
 )
 
 func usage() {
-	fmt.Println("go-hugo-lc version 0.5.2")
+	fmt.Println("go-hugo-lc version 0.5.3")
 	fmt.Println("License : MIT License Copyright (c) 2020 John Siu")
 	fmt.Println("Support : https://github.com/J-Siu/go-hugo-lc/issues")
 	fmt.Println("Debug   : export _DEBUG=true")
