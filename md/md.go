@@ -65,10 +65,10 @@ func walkdir(path string, info os.FileInfo, err error) error {
 }
 
 // Process - create MD array entry
-func Process(dir string) {
-	helper.DebugLog("MD:Init:dir:", dir)
+func Process() {
+	helper.DebugLog("MD:Init:dir:", site.Content)
 	// Get MD file list
-	helper.ErrCheck(filepath.Walk(dir, walkdir))
+	helper.ErrCheck(filepath.Walk(site.Content, walkdir))
 	wg.Wait()
 }
 
@@ -113,7 +113,7 @@ func (md *MD) checkLink(wg *sync.WaitGroup, link [][]byte) {
 	if linkURL.Host == "" {
 		helper.DebugLog("MD:checkLink:(local)")
 		// check if public+path exist
-		localPath = path.Join(site.Site.Public, linkURL.Path)
+		localPath = path.Join(site.Public, linkURL.Path)
 		_, e = os.Stat(localPath)
 		if e == nil {
 			helper.DebugLog("MD:checkLink:localPath:(found)", localPath)

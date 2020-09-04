@@ -14,12 +14,11 @@ package site
 
 import "net/url"
 
-// SITE struct
-type SITE struct {
-	BaseURL *url.URL
-	Content string // content directory
-	Public  string // public directory
-}
+// BaseURL - site base url
+var BaseURL *url.URL
 
-// Site var
-var Site = new(SITE)
+// Content - site content dir
+var Content string
+
+// Public - site public dir
+var Public string

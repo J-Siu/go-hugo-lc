@@ -21,10 +21,11 @@ import (
 	"github.com/J-Siu/go-helper"
 	"github.com/J-Siu/go-hugo-lc/md"
 	"github.com/J-Siu/go-hugo-lc/site"
+	"github.com/J-Siu/go-ver"
 )
 
 func usage() {
-	fmt.Println("go-hugo-lc version 0.5.3")
+	fmt.Println("go-hugo-lc", ver.ToStr())
 	fmt.Println("License : MIT License Copyright (c) 2020 John Siu")
 	fmt.Println("Support : https://github.com/J-Siu/go-hugo-lc/issues")
 	fmt.Println("Debug   : export _DEBUG=true")
@@ -33,6 +34,10 @@ func usage() {
 
 func main() {
 	helper.DebugEnv()
+
+	ver.Major = 0
+	ver.Minor = 5
+	ver.Patch = 4
 
 	//md.ChkExt = true
 
@@ -50,18 +55,18 @@ func main() {
 		os.Exit(1)
 	}
 	var e error
-	site.Site.BaseURL, e = url.Parse(args[0])
+	site.BaseURL, e = url.Parse(args[0])
 	helper.ErrCheck(e)
-	site.Site.Content = args[1]
-	site.Site.Public = args[2]
+	site.Content = args[1]
+	site.Public = args[2]
 
 	if helper.Debug {
-		helper.DebugLog("BaseURL.host:", site.Site.BaseURL.Host)
-		helper.DebugLog("BaseURL.path:", site.Site.BaseURL.Path)
-		helper.DebugLog("Content:", site.Site.Content)
-		helper.DebugLog("Public:", site.Site.Public)
+		helper.DebugLog("BaseURL.host:", site.BaseURL.Host)
+		helper.DebugLog("BaseURL.path:", site.BaseURL.Path)
+		helper.DebugLog("Content:", site.Content)
+		helper.DebugLog("Public:", site.Public)
 	}
 
-	md.Process(site.Site.Content)
+	md.Process()
 	md.Report()
 }
