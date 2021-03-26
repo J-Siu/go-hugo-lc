@@ -50,7 +50,7 @@ go-hugo-lc
 
 ```sh
 go-hugo-lc v0.5.4
-License : MIT License Copyright (c) 2020 John Siu
+License : MIT License Copyright (c) 2021 John Siu
 Support : https://github.com/J-Siu/go-hugo-lc/issues
 Debug   : export _DEBUG=true
 Usage   : go-hugo-lc <baseURL> <content dir> <public dir>
@@ -89,12 +89,14 @@ go-hugo-lc https://example.com content/post/post.md public
 - 0.5.4
   - Use github.com/J-Siu/go-ver
   - Remove site struct
+- 0.6.0
+  - Use Go 1.16
 
 ### License
 
 The MIT License
 
-Copyright (c) 2020 John Siu
+Copyright (c) 2021 John Siu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
