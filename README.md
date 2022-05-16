@@ -1,7 +1,8 @@
-## go-hugo-lc
+# go-hugo-lc [![Paypal donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/donate/?business=HZF49NM9D35SJ&no_recurring=0&currency_code=CAD)
 
 Hugo site link checker written in Golang. Handy for checking internal link breakage after migration.
 
+### Table Of Content
 <!-- TOC -->
 
 - [Highlight](#highlight)
