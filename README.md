@@ -16,7 +16,7 @@ Hugo site link checker written in Golang. Handy for checking internal link break
 - [License](#license)
 
 <!-- /TOC -->
-
+<!--more-->
 ### Highlight
 
 - Check using local content directory
