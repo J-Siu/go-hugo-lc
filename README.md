@@ -17,6 +17,8 @@ Hugo site link checker written in Golang. Handy for checking internal link break
 
 <!-- /TOC -->
 <!--more-->
+Handy for checking internal link breakage after migration.
+
 ### Highlight
 
 - Check using local content directory
