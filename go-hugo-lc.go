@@ -1,7 +1,7 @@
 /*
 	The MIT License
 
-	Copyright (c) 2021 John Siu
+	Copyright (c) 2023 John Siu
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -26,7 +26,7 @@ import (
 
 func usage() {
 	fmt.Println("go-hugo-lc", ver.ToStr())
-	fmt.Println("License : MIT License Copyright (c) 2021 John Siu")
+	fmt.Println("License : MIT License Copyright (c) 2023 John Siu")
 	fmt.Println("Support : https://github.com/J-Siu/go-hugo-lc/issues")
 	fmt.Println("Debug   : export _DEBUG=true")
 	fmt.Println("Usage   : go-hugo-lc <baseURL> <content dir> <public dir>")
@@ -35,9 +35,9 @@ func usage() {
 func main() {
 	helper.DebugEnv()
 
-	ver.Major = 0
-	ver.Minor = 5
-	ver.Patch = 4
+	ver.Major = 1
+	ver.Minor = 0
+	ver.Patch = 0
 
 	//md.ChkExt = true
 

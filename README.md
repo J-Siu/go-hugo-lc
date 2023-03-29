@@ -5,6 +5,7 @@ Hugo site link checker written in Golang. Handy for checking internal link break
 ### Table Of Content
 <!-- TOC -->
 
+- [Table Of Content](#table-of-content)
 - [Highlight](#highlight)
 - [Limitation](#limitation)
 - [Binary](#binary)
@@ -53,7 +54,7 @@ go-hugo-lc
 
 ```sh
 go-hugo-lc v0.5.4
-License : MIT License Copyright (c) 2021 John Siu
+License : MIT License Copyright (c) 2023 John Siu
 Support : https://github.com/J-Siu/go-hugo-lc/issues
 Debug   : export _DEBUG=true
 Usage   : go-hugo-lc <baseURL> <content dir> <public dir>
@@ -94,12 +95,14 @@ go-hugo-lc https://example.com content/post/post.md public
   - Remove site struct
 - 0.6.0
   - Use Go 1.16
+- v1.0.0
+  - Update to Go 1.20 and dependency
 
 ### License
 
 The MIT License
 
-Copyright (c) 2021 John Siu
+Copyright (c) 2023 John Siu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
