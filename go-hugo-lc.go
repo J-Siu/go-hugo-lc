@@ -1,7 +1,7 @@
 /*
 	The MIT License
 
-	Copyright (c) 2023 John Siu
+	Copyright (c) 2025 John Siu
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -26,7 +26,7 @@ import (
 
 func usage() {
 	fmt.Println("go-hugo-lc", ver.ToStr())
-	fmt.Println("License : MIT License Copyright (c) 2023 John Siu")
+	fmt.Println("License : MIT License Copyright (c) 2025 John Siu")
 	fmt.Println("Support : https://github.com/J-Siu/go-hugo-lc/issues")
 	fmt.Println("Debug   : export _DEBUG=true")
 	fmt.Println("Usage   : go-hugo-lc <baseURL> <content dir> <public dir>")
@@ -37,7 +37,7 @@ func main() {
 
 	ver.Major = 1
 	ver.Minor = 0
-	ver.Patch = 0
+	ver.Patch = 1
 
 	//md.ChkExt = true
 
@@ -49,7 +49,7 @@ func main() {
 		usage()
 		os.Exit(0)
 	case argc == 1:
-		helper.ErrCheck(errors.New("Content dir missing"))
+		helper.ErrCheck(errors.New("content dir missing"))
 	case argc > 3:
 		usage()
 		os.Exit(1)
