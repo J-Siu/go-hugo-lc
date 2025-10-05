@@ -23,38 +23,176 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/J-Siu/go-helper"
+	"github.com/J-Siu/go-helper/v2/basestruct"
+	"github.com/J-Siu/go-helper/v2/ezlog"
 	"github.com/J-Siu/go-hugo-lc/site"
+)
+
+var (
+	// ChkExt - check external
+	ChkExt = false
+
+	// ChkWeb - check again website
+	ChkWeb = false
+
+	// mds - MD array
+	mds = []*MD{}
+
+	// wg - wait group
+	wg sync.WaitGroup
+
+	// linkReg match [*](*)
+	linkReg = regexp.MustCompile(`(\[[^[]*\])\(([^(]*)\)`)
+
+	logLevel ezlog.Level = ezlog.ERR
 )
 
 // MD - Markdown structure
 type MD struct {
-	Fh    *os.File
-	Links [][][]byte // all links
-	Fails [][][]byte // all failed links
-	Path  string
-	Buf   []byte // content buffer
+	basestruct.Base
+	Fh    *os.File   `json:"fh,omitempty"`
+	Links [][][]byte `json:"links,omitempty"` // all links
+	Fails [][][]byte `json:"fails,omitempty"` // all failed links
+	Path  string     `json:"path,omitempty"`
+	Buf   []byte     `json:"buf,omitempty"` // content buffer
 }
 
-// ChkExt - check external
-var ChkExt = false
+func (t *MD) New() *MD {
+	t.MyType = "MD"
+	t.Initialized = true
+	return t
+}
 
-// ChkWeb - check again website
-var ChkWeb = false
+// CheckFile - Check against local file
+func (t *MD) chkLink(wg *sync.WaitGroup, link [][]byte) {
+	prefix := t.MyType + ".chkLink"
+	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	var (
+		e         error
+		linkURL   *url.URL
+		localPath string
+	)
+	linkURLprep := string(link[2][:])
 
-// mds - MD array
-var mds = []*MD{}
+	if strings.HasPrefix(linkURLprep, "//") {
+		linkURLprep = "https:" + linkURLprep
+	}
+	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("linkURLprep").M(linkURLprep).Out()
 
-// wg - wait group
-var wg sync.WaitGroup
+	linkURL, t.Err = url.Parse(linkURLprep)
+	if t.Err == nil {
+		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("linkURL.Host").M(linkURL.Host).Out()
+		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("linkURL.Path").M(linkURL.Path).Out()
 
-// linkReg match [*](*)
-var linkReg = regexp.MustCompile(`(\[[^[]*\])\(([^(]*)\)`)
+		if linkURL.Host == "" {
+			ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).M("(local)").Out()
+			// check if public+path exist
+			localPath = path.Join(site.Public, linkURL.Path)
+			_, e = os.Stat(localPath)
+			if e == nil {
+				ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("localPath:(found)").M(localPath).Out()
+			} else {
+				// path does not exist
+				ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("localPath:(not found)").M(localPath).Out()
+				t.Fails = append(t.Fails, link)
+			}
+		} else {
+			if ChkExt {
+				resp, e := http.Get(linkURLprep)
+				if e == nil {
+					defer resp.Body.Close()
+					ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("resp.StatusCode").M(resp.StatusCode).Out()
+					if resp.StatusCode >= 400 {
+						t.Fails = append(t.Fails, link)
+					}
+				} else {
+					ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("ChkExt:e").M(e).Out()
+					t.Fails = append(t.Fails, link)
+				}
+			} else {
+				ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).M("(not local)").Out()
+			}
+		}
+	}
+	wg.Done()
+}
 
-func walkdir(path string, info os.FileInfo, err error) error {
+// Check - check internal links
+func (t *MD) chk() {
+	prefix := t.MyType + ".chk"
+	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	if t.Err == nil {
+		// Get links
+		t.Links = linkReg.FindAllSubmatch([]byte(t.Buf), -1)
+		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("md.Links#").M(len(t.Links)).Out()
+		// free the buf
+		t.Buf = nil
+
+		var wg sync.WaitGroup
+		for _, link := range t.Links {
+			wg.Add(1)
+			go t.chkLink(&wg, link)
+		}
+		wg.Wait()
+	}
+}
+
+// Close markdown file
+func (t *MD) close() *MD {
+	prefix := t.MyType + ".close"
+	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	if t.Err == nil {
+		t.Err = t.Fh.Close()
+	}
+	return t
+}
+
+// Open markdown file
+func (t *MD) open() *MD {
+	prefix := t.MyType + ".open"
+	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	if t.Err == nil {
+		t.Fh, t.Err = os.Open(t.Path)
+	}
+	return t
+}
+
+// Read markdown file
+func (t *MD) read() *MD {
+	prefix := t.MyType + ".read"
+	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	var (
+		n int
+		// n64  int64
+		stat os.FileInfo
+	)
+	if t.Err == nil {
+		// Reset to file start
+		// n64, t.Err = t.Fh.Seek(0, 0)
+		_, t.Err = t.Fh.Seek(0, 0)
+	}
+	if t.Err == nil {
+		// ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("Seek").M(n64).Out()
+		stat, t.Err = os.Stat(t.Path)
+	}
+	if t.Err == nil {
+		t.Buf = make([]byte, stat.Size())
+		n, t.Err = t.Fh.Read(t.Buf)
+		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("byte").M(n).Out()
+	}
+	return t
+}
+
+// Process markdown file
+func (t *MD) process(wg *sync.WaitGroup) {
+	t.open().read().close().chk()
+	wg.Done()
+}
+
+func walkDir(path string, info os.FileInfo, err error) error {
 	if info != nil {
 		if !info.IsDir() && strings.ToLower(filepath.Ext(path)) == ".md" {
-			m := new(MD)
+			m := new(MD).New()
 			m.Path = path
 			mds = append(mds, m)
 			wg.Add(1)
@@ -65,10 +203,15 @@ func walkdir(path string, info os.FileInfo, err error) error {
 }
 
 // Process - create MD array entry
-func Process() {
-	helper.DebugLog("MD:Init:dir:", site.Content)
+func Process(debug bool) {
+	if debug {
+		logLevel = ezlog.DEBUG
+	}
+	ezlog.Debug().N("md.Process").M(site.Content).Out()
 	// Get MD file list
-	helper.ErrCheck(filepath.Walk(site.Content, walkdir))
+	if filepath.Walk(site.Content, walkDir) != nil {
+		return
+	}
 	wg.Wait()
 }
 
@@ -93,113 +236,4 @@ func Report() {
 	fmt.Printf("Total File: %d\n", len(mds))
 	fmt.Printf("Total Link: %d\n", totalLink)
 	fmt.Printf("Total Fail: %d\n", totalFail)
-}
-
-// CheckFile - Check against local file
-func (md *MD) checkLink(wg *sync.WaitGroup, link [][]byte) {
-	var localPath string
-	linkURLprep := string(link[2][:])
-
-	if strings.HasPrefix(linkURLprep, "//") {
-		linkURLprep = "https:" + linkURLprep
-	}
-	helper.DebugLog("MD:checkLink:linkURLprep:", linkURLprep)
-
-	linkURL, e := url.Parse(linkURLprep)
-	helper.ErrCheck(e)
-	helper.DebugLog("MD:checkLink:linkURL.Host:", linkURL.Host)
-	helper.DebugLog("MD:checkLink:linkURL.Path:", linkURL.Path)
-
-	if linkURL.Host == "" {
-		helper.DebugLog("MD:checkLink:(local)")
-		// check if public+path exist
-		localPath = path.Join(site.Public, linkURL.Path)
-		_, e = os.Stat(localPath)
-		if e == nil {
-			helper.DebugLog("MD:checkLink:localPath:(found)", localPath)
-		} else {
-			// path does not exist
-			helper.DebugLog("MD:checkLink:localPath:(not found)", localPath)
-			md.Fails = append(md.Fails, link)
-		}
-	} else {
-		if ChkExt {
-			resp, e := http.Get(linkURLprep)
-			if e == nil {
-				defer resp.Body.Close()
-				helper.DebugLog("MD:checkLink:resp.StatusCode:", resp.StatusCode)
-				if resp.StatusCode >= 400 {
-					md.Fails = append(md.Fails, link)
-				}
-			} else {
-				helper.DebugLog("MD:checkLink:ChkExt:e:", e)
-				md.Fails = append(md.Fails, link)
-			}
-		} else {
-			helper.DebugLog("MD:checkLink:(not local)")
-		}
-	}
-
-	wg.Done()
-}
-
-// Check - check internal links
-func (md *MD) chk() {
-	// Get links
-	md.Links = linkReg.FindAllSubmatch([]byte(md.Buf), -1)
-	helper.DebugLog("MD:Check:md.Links#:", len(md.Links))
-	// free the buf
-	md.Buf = nil
-
-	var wg sync.WaitGroup
-	for _, link := range md.Links {
-		wg.Add(1)
-		go md.checkLink(&wg, link)
-	}
-	wg.Wait()
-}
-
-// Close markdown file
-func (md *MD) close() error {
-	helper.DebugLog("MD:Close")
-	return md.Fh.Close()
-}
-
-// Open markdown file
-func (md *MD) open() error {
-	var e error
-	helper.DebugLog("MD:Open")
-	md.Fh, e = os.Open(md.Path)
-	return e
-}
-
-// Read markdown file
-func (md *MD) read() error {
-	helper.DebugLog("MD:Read")
-
-	var e error
-	var n int
-	var n64 int64
-
-	// Reset to file start
-	n64, e = md.Fh.Seek(0, 0)
-	helper.ErrCheck(e)
-	helper.DebugLog("MD:Read:Seek:", n64)
-
-	stat, e := os.Stat(md.Path)
-	helper.ErrCheck(e)
-	md.Buf = make([]byte, stat.Size())
-	n, e = md.Fh.Read(md.Buf)
-	helper.DebugLog("MD:Read:byte:", n)
-
-	return e
-}
-
-// Process markdown file
-func (md *MD) process(wg *sync.WaitGroup) {
-	helper.ErrCheck(md.open())
-	helper.ErrCheck(md.read())
-	helper.ErrCheck(md.close())
-	md.chk()
-	wg.Done()
 }

@@ -5,7 +5,6 @@ Hugo site link checker written in Golang. Handy for checking internal link break
 ### Table Of Content
 <!-- TOC -->
 
-- [Table Of Content](#table-of-content)
 - [Highlight](#highlight)
 - [Limitation](#limitation)
 - [Binary](#binary)
@@ -99,6 +98,8 @@ go-hugo-lc https://example.com content/post/post.md public
   - Update to Go 1.20 and dependency
 - v1.0.1
   - Fix Github workflows
+- v1.0.2
+  - Update to [go-helper/v2](//github.com/J-Siu/go-helper)
 
 ### License
 
