@@ -66,7 +66,8 @@ func (t *MD) New() *MD {
 // CheckFile - Check against local file
 func (t *MD) chkLink(wg *sync.WaitGroup, link [][]byte) {
 	prefix := t.MyType + ".chkLink"
-	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	log := ezlog.New().SetLogLevel(logLevel)
+	log.Debug().N(prefix).Out()
 	var (
 		e         error
 		linkURL   *url.URL
@@ -77,23 +78,23 @@ func (t *MD) chkLink(wg *sync.WaitGroup, link [][]byte) {
 	if strings.HasPrefix(linkURLprep, "//") {
 		linkURLprep = "https:" + linkURLprep
 	}
-	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("linkURLprep").M(linkURLprep).Out()
+	log.Debug().N(prefix).N("linkURLprep").M(linkURLprep).Out()
 
 	linkURL, t.Err = url.Parse(linkURLprep)
 	if t.Err == nil {
-		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("linkURL.Host").M(linkURL.Host).Out()
-		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("linkURL.Path").M(linkURL.Path).Out()
+		log.Debug().N(prefix).N("linkURL.Host").M(linkURL.Host).Out()
+		log.Debug().N(prefix).N("linkURL.Path").M(linkURL.Path).Out()
 
 		if linkURL.Host == "" {
-			ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).M("(local)").Out()
+			log.Debug().N(prefix).M("(local)").Out()
 			// check if public+path exist
 			localPath = path.Join(site.Public, linkURL.Path)
 			_, e = os.Stat(localPath)
 			if e == nil {
-				ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("localPath:(found)").M(localPath).Out()
+				log.Debug().N(prefix).N("localPath:(found)").M(localPath).Out()
 			} else {
 				// path does not exist
-				ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("localPath:(not found)").M(localPath).Out()
+				log.Debug().N(prefix).N("localPath:(not found)").M(localPath).Out()
 				t.Fails = append(t.Fails, link)
 			}
 		} else {
@@ -101,16 +102,16 @@ func (t *MD) chkLink(wg *sync.WaitGroup, link [][]byte) {
 				resp, e := http.Get(linkURLprep)
 				if e == nil {
 					defer resp.Body.Close()
-					ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("resp.StatusCode").M(resp.StatusCode).Out()
+					log.Debug().N(prefix).N("resp.StatusCode").M(resp.StatusCode).Out()
 					if resp.StatusCode >= 400 {
 						t.Fails = append(t.Fails, link)
 					}
 				} else {
-					ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("ChkExt:e").M(e).Out()
+					log.Debug().N(prefix).N("ChkExt:e").M(e).Out()
 					t.Fails = append(t.Fails, link)
 				}
 			} else {
-				ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).M("(not local)").Out()
+				log.Debug().N(prefix).M("(not local)").Out()
 			}
 		}
 	}
@@ -120,11 +121,12 @@ func (t *MD) chkLink(wg *sync.WaitGroup, link [][]byte) {
 // Check - check internal links
 func (t *MD) chk() {
 	prefix := t.MyType + ".chk"
-	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	log := ezlog.New().SetLogLevel(logLevel)
+	log.Debug().N(prefix).Out()
 	if t.Err == nil {
 		// Get links
 		t.Links = linkReg.FindAllSubmatch([]byte(t.Buf), -1)
-		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("md.Links#").M(len(t.Links)).Out()
+		log.Debug().N(prefix).N("md.Links#").M(len(t.Links)).Out()
 		// free the buf
 		t.Buf = nil
 
@@ -140,7 +142,8 @@ func (t *MD) chk() {
 // Close markdown file
 func (t *MD) close() *MD {
 	prefix := t.MyType + ".close"
-	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	log := ezlog.New().SetLogLevel(logLevel)
+	log.Debug().N(prefix).Out()
 	if t.Err == nil {
 		t.Err = t.Fh.Close()
 	}
@@ -150,7 +153,8 @@ func (t *MD) close() *MD {
 // Open markdown file
 func (t *MD) open() *MD {
 	prefix := t.MyType + ".open"
-	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	log := ezlog.New().SetLogLevel(logLevel)
+	log.Debug().N(prefix).Out()
 	if t.Err == nil {
 		t.Fh, t.Err = os.Open(t.Path)
 	}
@@ -160,7 +164,8 @@ func (t *MD) open() *MD {
 // Read markdown file
 func (t *MD) read() *MD {
 	prefix := t.MyType + ".read"
-	ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).Out()
+	log := ezlog.New().SetLogLevel(logLevel)
+	log.Debug().N(prefix).Out()
 	var (
 		n int
 		// n64  int64
@@ -172,13 +177,13 @@ func (t *MD) read() *MD {
 		_, t.Err = t.Fh.Seek(0, 0)
 	}
 	if t.Err == nil {
-		// ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("Seek").M(n64).Out()
+		// log.Debug().N(prefix).N("Seek").M(n64).Out()
 		stat, t.Err = os.Stat(t.Path)
 	}
 	if t.Err == nil {
 		t.Buf = make([]byte, stat.Size())
 		n, t.Err = t.Fh.Read(t.Buf)
-		ezlog.New().SetLogLevel(logLevel).Debug().N(prefix).N("byte").M(n).Out()
+		log.Debug().N(prefix).N("byte").M(n).Out()
 	}
 	return t
 }
@@ -204,10 +209,11 @@ func walkDir(path string, info os.FileInfo, err error) error {
 
 // Process - create MD array entry
 func Process(debug bool) {
+	prefix := "md.Process"
 	if debug {
 		logLevel = ezlog.DEBUG
 	}
-	ezlog.Debug().N("md.Process").M(site.Content).Out()
+	ezlog.Debug().N(prefix).M(site.Content).Out()
 	// Get MD file list
 	if filepath.Walk(site.Content, walkDir) != nil {
 		return
@@ -220,16 +226,13 @@ func Report() {
 	var totalLink = 0
 	var totalFail = 0
 	for _, m := range mds {
-		fmt.Printf("File: %s\n", m.Path)
-		fmt.Printf("Link: %d\n", len(m.Links))
+		fmt.Printf("Fail: %d/%d | Path: %s\n", len(m.Fails), len(m.Links), m.Path)
 		totalLink += len(m.Links)
 		totalFail += len(m.Fails)
 		if m.Fails != nil {
-			fmt.Printf("Link: %d\n", len(m.Fails))
 			for _, fail := range m.Fails {
 				fmt.Println("[x]", string(fail[2][:]))
 			}
-			fmt.Println()
 			fmt.Println("---")
 		}
 	}
