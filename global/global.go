@@ -22,7 +22,13 @@ THE SOFTWARE.
 
 package global
 
-import "github.com/J-Siu/go-hugo-lc/lib"
+import (
+	"github.com/J-Siu/go-hugo-lc/lib"
+)
+
+const (
+	Version = "v1.0.3"
+)
 
 var (
 	Flag lib.TypeFlag
