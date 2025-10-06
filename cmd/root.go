@@ -29,7 +29,7 @@ import (
 
 	"github.com/J-Siu/go-helper/v2/errs"
 	"github.com/J-Siu/go-helper/v2/ezlog"
-	"github.com/J-Siu/go-helper/v2/ver"
+	"github.com/J-Siu/go-helper/v2/file"
 	"github.com/J-Siu/go-hugo-lc/global"
 	"github.com/J-Siu/go-hugo-lc/md"
 	"github.com/J-Siu/go-hugo-lc/site"
@@ -40,24 +40,33 @@ import (
 var rootCmd = &cobra.Command{
 	Use:     "go-hugo-lc",
 	Short:   `Hugo site link check`,
-	Version: ver.String(),
+	Version: global.Version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ezlog.SetLogLevel(ezlog.ERR)
 		if global.Flag.Debug {
 			ezlog.SetLogLevel(ezlog.DEBUG)
 		}
-		ezlog.Debug().N("Version").Mn(ver.String()).Nn("Flag").M(&global.Flag).Out()
+		ezlog.Debug().N("Version").Mn(global.Version).Nn("Flag").Mn(&global.Flag).
+			N("Content").Mn(site.Content).
+			N("Public").M(site.Public).
+			Out()
+
 		// Pre-check
+
 		if global.Flag.BaseURL == "" || site.Content == "" || site.Public == "" {
-			errs.Queue("", errors.New("Missing parameters."))
+			cmd.Usage()
+			os.Exit(0) // just exit
+		}
+		if errs.IsEmpty() && !file.IsDir(site.Content) {
+			errs.Queue("", errors.New("Not directory: "+site.Content))
+		}
+		if errs.IsEmpty() && !file.IsDir(site.Public) {
+			errs.Queue("", errors.New("Not directory: "+site.Public))
 		}
 		if errs.IsEmpty() {
 			var e error
 			site.BaseURL, e = url.Parse(global.Flag.BaseURL)
 			errs.Queue("", e)
 		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
 		if errs.IsEmpty() {
 			ezlog.Debug().
 				N("BaseURL.host").Mn(site.BaseURL.Host).
@@ -65,6 +74,10 @@ var rootCmd = &cobra.Command{
 				N("Content").Mn(site.Content).
 				N("Public").M(site.Public).
 				Out()
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		if errs.IsEmpty() {
 			if global.Flag.Debug {
 				ezlog.SetLogLevel(ezlog.DEBUG)
 			}
@@ -74,7 +87,8 @@ var rootCmd = &cobra.Command{
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		if !errs.IsEmpty() {
-			ezlog.Err().Nn("Error").M(errs.Errs).Out()
+			ezlog.Err().Ln().M(errs.Errs).Out()
+			cmd.Usage()
 			os.Exit(1)
 		}
 	},
@@ -89,7 +103,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&global.Flag.Debug, "debug", "d", false, "Enable debug")
-	rootCmd.PersistentFlags().StringVarP(&global.Flag.BaseURL, "baseURL", "b", "", "Base URL")
-	rootCmd.PersistentFlags().StringVarP(&site.Content, "content", "c", "", "Content directory")
-	rootCmd.PersistentFlags().StringVarP(&site.Public, "public", "p", "", "Public directory")
+	rootCmd.PersistentFlags().StringVarP(&global.Flag.BaseURL, "baseURL", "b", "", "(required) Base URL")
+	rootCmd.PersistentFlags().StringVarP(&site.Content, "content", "c", "", "(required) Content directory")
+	rootCmd.PersistentFlags().StringVarP(&site.Public, "public", "p", "", "(required) Public directory")
 }
