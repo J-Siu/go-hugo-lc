@@ -22,10 +22,6 @@ THE SOFTWARE.
 
 package global
 
-import (
-	"github.com/J-Siu/go-hugo-lc/lib"
-)
-
-var (
-	Flag lib.TypeFlag
+const (
+	Version = "v1.0.4"
 )

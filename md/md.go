@@ -44,7 +44,7 @@ var (
 	// linkReg match [*](*)
 	linkReg = regexp.MustCompile(`(\[[^[]*\])\(([^(]*)\)`)
 
-	logLevel ezlog.Level = ezlog.ERR
+	logLevel ezlog.EzLogLevel = ezlog.ERR
 )
 
 // MD - Markdown structure

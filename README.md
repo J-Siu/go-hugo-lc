@@ -98,8 +98,13 @@ go-hugo-lc https://example.com content/post/post.md public
   - Update to Go 1.20 and dependency
 - v1.0.1
   - Fix Github workflows
-- v1.0.2
+- v1.0.3
   - Update to [go-helper/v2](//github.com/J-Siu/go-helper)
+- v1.0.4
+  - Add cli arg check
+  - Add version const
+  - Fix debug output concurrency issue
+  - Update go-helper/v2
 
 ### License
 
