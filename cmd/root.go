@@ -23,13 +23,10 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"errors"
-	"net/url"
 	"os"
 
 	"github.com/J-Siu/go-helper/v2/errs"
 	"github.com/J-Siu/go-helper/v2/ezlog"
-	"github.com/J-Siu/go-helper/v2/file"
 	"github.com/J-Siu/go-hugo-lc/global"
 	"github.com/J-Siu/go-hugo-lc/md"
 	"github.com/J-Siu/go-hugo-lc/site"
@@ -43,34 +40,10 @@ var rootCmd = &cobra.Command{
 	Version: global.Version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if global.Flag.Debug {
-			ezlog.SetLogLevel(ezlog.DEBUG)
-		}
-		ezlog.Debug().N("Version").Mn(global.Version).Nn("Flag").Mn(&global.Flag).
-			N("Content").Mn(site.Content).
-			N("Public").M(site.Public).
-			Out()
-
-		// Pre-check
-
-		if global.Flag.BaseURL == "" || site.Content == "" || site.Public == "" {
-			cmd.Usage()
-			os.Exit(0) // just exit
-		}
-		if errs.IsEmpty() && !file.IsDir(site.Content) {
-			errs.Queue("", errors.New("Not directory: "+site.Content))
-		}
-		if errs.IsEmpty() && !file.IsDir(site.Public) {
-			errs.Queue("", errors.New("Not directory: "+site.Public))
-		}
-		if errs.IsEmpty() {
-			var e error
-			site.BaseURL, e = url.Parse(global.Flag.BaseURL)
-			errs.Queue("", e)
-		}
-		if errs.IsEmpty() {
-			ezlog.Debug().
-				N("BaseURL.host").Mn(site.BaseURL.Host).
-				N("BaseURL.path").Mn(site.BaseURL.Path).
+			ezlog.
+				SetLogLevel(ezlog.DEBUG).Debug().
+				N("Version").Mn(global.Version).
+				Nn("Flag").Mn(&global.Flag).
 				N("Content").Mn(site.Content).
 				N("Public").M(site.Public).
 				Out()
@@ -102,8 +75,15 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&global.Flag.Debug, "debug", "d", false, "Enable debug")
-	rootCmd.PersistentFlags().StringVarP(&global.Flag.BaseURL, "baseURL", "b", "", "(required) Base URL")
-	rootCmd.PersistentFlags().StringVarP(&site.Content, "content", "c", "", "(required) Content directory")
-	rootCmd.PersistentFlags().StringVarP(&site.Public, "public", "p", "", "(required) Public directory")
+	cmd := rootCmd
+	cmd.PersistentFlags().BoolVarP(&global.Flag.Debug, "debug", "d", false, "Debug mode")
+	cmd.PersistentFlags().StringVarP(&global.Flag.BaseURL, "baseURL", "b", "", "(required) Base URL")
+	cmd.PersistentFlags().StringVarP(&site.Content, "content", "c", "", "(required) Content directory")
+	cmd.PersistentFlags().StringVarP(&site.Public, "public", "p", "", "(required) Public directory")
+
+	cmd.MarkPersistentFlagDirname("content")
+	cmd.MarkPersistentFlagDirname("public")
+	cmd.MarkPersistentFlagRequired("baseURL")
+	cmd.MarkPersistentFlagRequired("content")
+	cmd.MarkPersistentFlagRequired("public")
 }

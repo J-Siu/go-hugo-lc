@@ -50,7 +50,6 @@ var (
 // MD - Markdown structure
 type MD struct {
 	basestruct.Base
-	Fh    *os.File   `json:"fh,omitempty"`
 	Links [][][]byte `json:"links,omitempty"` // all links
 	Fails [][][]byte `json:"fails,omitempty"` // all failed links
 	Path  string     `json:"path,omitempty"`
@@ -139,58 +138,19 @@ func (t *MD) chk() {
 	}
 }
 
-// Close markdown file
-func (t *MD) close() *MD {
-	prefix := t.MyType + ".close"
-	log := ezlog.New().SetLogLevel(logLevel)
-	log.Debug().N(prefix).Out()
-	if t.Err == nil {
-		t.Err = t.Fh.Close()
-	}
-	return t
-}
-
-// Open markdown file
-func (t *MD) open() *MD {
-	prefix := t.MyType + ".open"
-	log := ezlog.New().SetLogLevel(logLevel)
-	log.Debug().N(prefix).Out()
-	if t.Err == nil {
-		t.Fh, t.Err = os.Open(t.Path)
-	}
-	return t
-}
-
 // Read markdown file
 func (t *MD) read() *MD {
 	prefix := t.MyType + ".read"
 	log := ezlog.New().SetLogLevel(logLevel)
-	log.Debug().N(prefix).Out()
-	var (
-		n int
-		// n64  int64
-		stat os.FileInfo
-	)
-	if t.Err == nil {
-		// Reset to file start
-		// n64, t.Err = t.Fh.Seek(0, 0)
-		_, t.Err = t.Fh.Seek(0, 0)
-	}
-	if t.Err == nil {
-		// log.Debug().N(prefix).N("Seek").M(n64).Out()
-		stat, t.Err = os.Stat(t.Path)
-	}
-	if t.Err == nil {
-		t.Buf = make([]byte, stat.Size())
-		n, t.Err = t.Fh.Read(t.Buf)
-		log.Debug().N(prefix).N("byte").M(n).Out()
-	}
+	log.Debug().N(prefix).M(t.Path).Out()
+
+	t.Buf, t.Err = os.ReadFile(t.Path)
 	return t
 }
 
 // Process markdown file
 func (t *MD) process(wg *sync.WaitGroup) {
-	t.open().read().close().chk()
+	t.read().chk()
 	wg.Done()
 }
 

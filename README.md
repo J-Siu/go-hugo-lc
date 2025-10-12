@@ -3,39 +3,31 @@
 Hugo site link checker written in Golang. Handy for checking internal link breakage after migration.
 
 ### Table Of Content
-<!-- TOC -->
 
-- [Highlight](#highlight)
-- [Limitation](#limitation)
-- [Binary](#binary)
+- [Install](#install)
 - [Compile](#compile)
 - [Usage](#usage)
+- [Highlight](#highlight)
+- [Limitation](#limitation)
 - [Repository](#repository)
 - [Contributors](#contributors)
 - [Change Log](#change-log)
 - [License](#license)
 
-<!-- /TOC -->
 <!--more-->
 Handy for checking internal link breakage after migration.
 
-### Highlight
+### Install
 
-- Check using local content directory
-- Does not use markdown parser
-- Golang standard library only
+Go install
 
-### Limitation
+```sh
+go install github.com/J-Siu/go-hugo-lc@latest
+```
 
-- Verify internal link only
-- Links need server side redirection will be marked as fail
-- Only detect links in markdown format `[]()`
+Download
 
-All 3 may improve in future.
-
-### Binary
-
-https://github.com/J-Siu/go-hugo-lc/releases
+- https://github.com/J-Siu/go-hugo-lc/releases
 
 ### Compile
 
@@ -52,11 +44,16 @@ go-hugo-lc
 ```
 
 ```sh
-go-hugo-lc v0.5.4
-License : MIT License Copyright (c) 2025 John Siu
-Support : https://github.com/J-Siu/go-hugo-lc/issues
-Debug   : export _DEBUG=true
-Usage   : go-hugo-lc <baseURL> <content dir> <public dir>
+Usage:
+  go-hugo-lc [flags]
+
+Flags:
+  -b, --baseURL string   (must) Base URL
+  -c, --content string   (must) Content directory
+  -d, --debug            Enable debug
+  -h, --help             help for go-hugo-lc
+  -p, --public string    (must) Public directory
+  -v, --version          version for go-hugo-lc
 ```
 
 In Hugo site root:
@@ -70,6 +67,20 @@ Single page usage:
 ```sh
 go-hugo-lc https://example.com content/post/post.md public
 ```
+
+### Highlight
+
+- Check using local content directory
+- Does not use markdown parser
+- Golang standard library only
+
+### Limitation
+
+- Verify internal link only
+- Links need server side redirection will be marked as fail
+- Only detect links in markdown format `[]()`
+
+All 3 may improve in future.
 
 ### Repository
 
@@ -105,6 +116,9 @@ go-hugo-lc https://example.com content/post/post.md public
   - Add version const
   - Fix debug output concurrency issue
   - Update go-helper/v2
+- v1.0.5
+  - Cli checking
+  - md use `os.ReadFile`
 
 ### License
 
