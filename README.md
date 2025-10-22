@@ -90,36 +90,6 @@ All 3 may improve in future.
 
 - [John Sing Dao Siu](https://github.com/J-Siu)
 
-### Change Log
-
-- 0.5
-  - Initial Commit
-- 0.5.1
-  - Use mod
-- 0.5.2
-  - Use github.com/J-Siu/go-helper
-- 0.5.3
-  - Use Go routine
-- 0.5.4
-  - Use github.com/J-Siu/go-ver
-  - Remove site struct
-- 0.6.0
-  - Use Go 1.16
-- v1.0.0
-  - Update to Go 1.20 and dependency
-- v1.0.1
-  - Fix Github workflows
-- v1.0.3
-  - Update to [go-helper/v2](//github.com/J-Siu/go-helper)
-- v1.0.4
-  - Add cli arg check
-  - Add version const
-  - Fix debug output concurrency issue
-  - Update go-helper/v2
-- v1.0.5
-  - Cli checking
-  - md use `os.ReadFile`
-
 ### License
 
 The MIT License
