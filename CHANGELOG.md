@@ -25,3 +25,5 @@
 - v1.0.5
   - Cli checking
   - md use `os.ReadFile`
+- v1.0.6
+  - update go-helper/v2

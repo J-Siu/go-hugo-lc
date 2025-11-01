@@ -42,10 +42,10 @@ var rootCmd = &cobra.Command{
 		if global.Flag.Debug {
 			ezlog.
 				SetLogLevel(ezlog.DEBUG).Debug().
-				N("Version").Mn(global.Version).
-				Nn("Flag").Mn(&global.Flag).
-				N("Content").Mn(site.Content).
-				N("Public").M(site.Public).
+				N("Version").M(global.Version).
+				Ln("Flag").M(&global.Flag).
+				Ln("Content").M(site.Content).
+				Ln("Public").M(site.Public).
 				Out()
 		}
 	},
