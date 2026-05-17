@@ -27,3 +27,5 @@
   - md use `os.ReadFile`
 - v1.0.6
   - update go-helper/v2
+- v1.0.7
+  - update go-helper/v2
